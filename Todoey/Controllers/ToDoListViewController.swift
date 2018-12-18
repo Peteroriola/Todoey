@@ -61,15 +61,20 @@ class ToDoListViewController: UITableViewController {
     //MARK:- Tableview Delegete Method
  
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        if let item = toDoItems?[indexPath.row] {
+            do {
+                
+                try realm.write {
+                   // realm.delete(item)
+                    
+                item.done = !item.done
+                }
+            }catch {
+                print("Error saving done property\(error)")
+            }
+        }
+        tableView.reloadData()
         
-       //context.delete(itemArray[indexPath.row])
-        //itemArray.remove(at: indexPath.row)
-        
-       // toDoItems[indexPath.row].done = !toDoItems[indexPath.row].done
-        
-        //saveItems()
-        
-        //tableView.reloadData()
         tableView.deselectRow(at: indexPath, animated: true)
     }
     
@@ -87,6 +92,7 @@ class ToDoListViewController: UITableViewController {
                     try self.realm.write {
                         let newItem = Item()
                         newItem.title = textField.text!
+                        newItem.dateCreated = Date()
                         currentCategory.item.append(newItem)
                     }
                     
@@ -119,30 +125,26 @@ class ToDoListViewController: UITableViewController {
     
     
 }
-
+}
 //MARK:- Searchbar Methods
 
-//extension ToDoListViewController: UISearchBarDelegate {
+extension ToDoListViewController: UISearchBarDelegate {
     
-//    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
- //       let request : NSFetchRequest<Item> = Item.fetchRequest()
+    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
         
- //      let predicate = NSPredicate(format: "title CONTAINS[cd] %@", searchBar.text!)
+        toDoItems = toDoItems?.filter("title CONTAINS[cd] %@", searchBar.text!).sorted(byKeyPath: "dateCreated", ascending: true)
         
- //       request.sortDescriptors = [NSSortDescriptor(key: "title", ascending: true)]
-        
-  //      loadItems(with: request, predicate: predicate )
+        tableView.reloadData()
+}
     
-//}
-    
-  //  func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
-  //      if searchBar.text?.count == 0 {
-  //          loadItems()
+  func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+      if searchBar.text?.count == 0 {
+          loadItems()
             
-  //          DispatchQueue.main.async {
-   //             searchBar.resignFirstResponder()
-   //         }
-   //     }
-   // }
+          DispatchQueue.main.async {
+             searchBar.resignFirstResponder()
+         }
+     }
+ }
     
 }
